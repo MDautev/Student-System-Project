@@ -9,12 +9,72 @@
 #include "CriteriaByMinGrade.h"
 #include "AndCriteria.h"
 #include "OrCriteria.h"
+#include "SortByFacultyNumber.h"
+#include "SortByGrade.h"
+#include "SortByName.h"
 #include <vector>
+#include <algorithm>
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
 using namespace std;
+
+#include <cstdlib>
+#include <ctime>
+
+// Временно за тестове
+void generateTestStudents(GroupManager &manager, int count = 10)
+{
+    srand(static_cast<unsigned>(time(0)));
+
+    string names[] = {"Иван", "Георги", "Мария", "Елена", "Димитър", "Петя", "Александър", "Светла"};
+    int groupNumbers[] = {11, 12, 21, 22};
+    int enrollYears[] = {2021, 2022, 2023};
+
+    for (int i = 0; i < count; i++)
+    {
+        string name = names[rand() % 8];
+        string egn = to_string(9000000000 + rand() % 1000000000); // случаен ЕГН
+        Date birthDate(rand() % 28 + 1, rand() % 12 + 1, 1995 + rand() % 10);
+
+        double grades[5];
+        for (int j = 0; j < 5; j++)
+            grades[j] = 3.0 + static_cast<double>(rand() % 21) / 10.0; // 3.0 - 5.0
+
+        int group = groupNumbers[rand() % 4];
+        int year = enrollYears[rand() % 3];
+
+        string fn = FacultyNumberGenerator::generate(group, year);
+
+        Student *s = new Student(name, egn, birthDate, grades, group, fn);
+        manager.addStudent(group, s);
+    }
+}
+
+SortStrategy *chooseSortStrategy()
+{
+    int sortChoice;
+    cout << "\nСортиране по:\n";
+    cout << "1. Име\n";
+    cout << "2. Успех\n";
+    cout << "3. Факултетен номер\n";
+    cout << "0. Без сортиране\n";
+    cout << "Избор: ";
+    cin >> sortChoice;
+
+    switch (sortChoice)
+    {
+    case 1:
+        return new SortByName();
+    case 2:
+        return new SortByGrade();
+    case 3:
+        return new SortByFacultyNumber();
+    default:
+        return nullptr;
+    }
+}
 
 int main()
 {
@@ -24,6 +84,10 @@ int main()
 #endif
 
     GroupManager manager;
+
+    // генерираме 10 тестови студенти
+    generateTestStudents(manager, 10);
+
     int choice;
 
     do
@@ -85,16 +149,31 @@ int main()
         case 2:
         {
             cout << "\n=== Всички студенти ===" << endl;
-            for (const auto &pair : manager.getAllGroups())
+
+            SortStrategy *strategy = chooseSortStrategy();
+
+            for (auto &pair : manager.getAllGroups())
             {
                 cout << "=== Група " << pair.first << " ===" << endl;
+
+                if (strategy)
+                {
+                    pair.second.setSortStrategy(strategy);
+                    pair.second.sortStudents();
+                }
+
                 pair.second.printAll();
             }
+
+            delete strategy;
             break;
         }
 
         case 3:
         {
+            vector<Student *> results;
+            SortStrategy *strategy = nullptr;
+
             int searchChoice;
             cout << "\n=== Търсене на студенти ===\n";
             cout << "1. По име\n";
@@ -105,6 +184,7 @@ int main()
             cout << "Изберете опция: ";
             cin >> searchChoice;
 
+            // === По отделни критерии ===
             if (searchChoice == 1)
             {
                 string name;
@@ -113,47 +193,40 @@ int main()
                 getline(cin, name);
 
                 CriteriaByName c(name);
-
                 for (const auto &pair : manager.getAllGroups())
                     for (int i = 0; i < pair.second.getCount(); i++)
                     {
                         Student *s = pair.second.getStudentAt(i);
                         if (c.meetsCriteria(*s))
-                            s->print();
+                            results.push_back(s);
                     }
             }
-
             else if (searchChoice == 2)
             {
                 int grp;
                 cout << "Номер на група: ";
                 cin >> grp;
-
                 CriteriaByGroup c(grp);
-
                 for (const auto &pair : manager.getAllGroups())
                     for (int i = 0; i < pair.second.getCount(); i++)
                     {
                         Student *s = pair.second.getStudentAt(i);
                         if (c.meetsCriteria(*s))
-                            s->print();
+                            results.push_back(s);
                     }
             }
-
             else if (searchChoice == 3)
             {
                 double minGrade;
                 cout << "Минимален успех: ";
                 cin >> minGrade;
-
                 CriteriaByMinGrade c(minGrade);
-
                 for (const auto &pair : manager.getAllGroups())
                     for (int i = 0; i < pair.second.getCount(); i++)
                     {
                         Student *s = pair.second.getStudentAt(i);
                         if (c.meetsCriteria(*s))
-                            s->print();
+                            results.push_back(s);
                     }
             }
             else if (searchChoice == 4)
@@ -161,29 +234,24 @@ int main()
                 string fn;
                 cout << "Факултетен номер: ";
                 cin >> fn;
-
-                bool found = false;
                 for (const auto &pair : manager.getAllGroups())
                 {
                     Student *s = pair.second.findByFacultyNumber(fn);
                     if (s)
                     {
-                        s->print();
-                        found = true;
+                        results.push_back(s);
                         break;
                     }
                 }
-
-                if (!found)
+                if (results.empty())
                     cout << "Няма такъв студент.\n";
             }
             else if (searchChoice == 5)
             {
                 vector<Criteria *> selectedCriteria;
-                vector<string> options = {"Име", "Група", "Минимален успех"}; // Факулт. номер не се слага тук
+                vector<string> options = {"Име", "Група", "Минимален успех"};
                 vector<bool> used(options.size(), false);
 
-                // Избор на първи критерий
                 int firstChoice;
                 cout << "Изберете първи критерий:\n";
                 for (int i = 0; i < options.size(); i++)
@@ -192,7 +260,7 @@ int main()
                 used[firstChoice - 1] = true;
 
                 Criteria *firstCrit = nullptr;
-                if (firstChoice == 1) // Име
+                if (firstChoice == 1)
                 {
                     string name;
                     cout << "Име или част от име: ";
@@ -200,14 +268,14 @@ int main()
                     getline(cin, name);
                     firstCrit = new CriteriaByName(name);
                 }
-                else if (firstChoice == 2) // Група
+                else if (firstChoice == 2)
                 {
                     int grp;
                     cout << "Номер на група: ";
                     cin >> grp;
                     firstCrit = new CriteriaByGroup(grp);
                 }
-                else if (firstChoice == 3) // Минимален успех
+                else if (firstChoice == 3)
                 {
                     double minGrade;
                     cout << "Минимален успех: ";
@@ -217,14 +285,12 @@ int main()
 
                 selectedCriteria.push_back(firstCrit);
 
-                // Логика AND / OR
                 int logicChoice;
                 cout << "1. AND (и)\n2. OR (или)\nИзберете логика: ";
                 cin >> logicChoice;
 
                 Criteria *combo = selectedCriteria[0];
 
-                // Добавяне на останалите опции
                 bool adding = true;
                 while (adding)
                 {
@@ -263,7 +329,6 @@ int main()
                         nextCrit = new CriteriaByMinGrade(minGrade);
                     }
 
-                    // Комбиниране
                     if (logicChoice == 1)
                         combo = new AndCriteria(*combo, *nextCrit);
                     else
@@ -272,21 +337,43 @@ int main()
                     selectedCriteria.push_back(nextCrit);
                 }
 
-                // Изпълнение на търсенето
                 for (const auto &pair : manager.getAllGroups())
                     for (int i = 0; i < pair.second.getCount(); i++)
                     {
                         Student *s = pair.second.getStudentAt(i);
                         if (combo->meetsCriteria(*s))
-                            s->print();
+                            results.push_back(s);
                     }
 
-                // Почистване
                 for (auto c : selectedCriteria)
                     delete c;
                 delete combo;
             }
 
+            // === Сортиране и печат ===
+            if (!results.empty())
+            {
+                if (searchChoice != 4)
+                {
+                    strategy = chooseSortStrategy();
+
+                    if (strategy)
+                    {
+                        sort(results.begin(), results.end(),
+                             [strategy](Student *a, Student *b)
+                             {
+                                 return strategy->compare(a, b);
+                             });
+                    }
+                }
+                for (Student *s : results)
+                {
+                    cout << "------------------\n";
+                    s->print();
+                }
+            }
+
+            delete strategy;
             break;
         }
 
@@ -297,7 +384,7 @@ int main()
             cin >> fn;
 
             bool deleted = false;
-            for (auto &pair : manager.getAllGroups()) // тук ще се вика неконстантната getAllGroups()
+            for (auto &pair : manager.getAllGroups())
             {
                 if (pair.second.removeByFacultyNumber(fn))
                 {

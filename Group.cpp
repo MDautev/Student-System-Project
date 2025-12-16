@@ -6,6 +6,7 @@ using namespace std;
 Group::Group()
 {
     count = 0;
+    sortStrategy = nullptr;
 }
 
 void Group::addStudent(Student *s)
@@ -57,4 +58,24 @@ bool Group::removeByFacultyNumber(const string &fn)
         }
     }
     return false; // няма такъв студент
+}
+
+void Group::setSortStrategy(SortStrategy *strategy)
+{
+    sortStrategy = strategy;
+}
+
+void Group::sortStudents()
+{
+    if (!sortStrategy)
+        return;
+
+    for (int i = 0; i < count - 1; i++)
+        for (int j = i + 1; j < count; j++)
+            if (!sortStrategy->compare(students[i], students[j]))
+            {
+                Student *tmp = students[i];
+                students[i] = students[j];
+                students[j] = tmp;
+            }
 }
