@@ -6,10 +6,11 @@ using namespace std;
 Student::Student(const string &n,
                  const string &egn,
                  const Date &d,
+                 Gender gender,
                  double g[5],
                  int groupNum,
                  const string &fn) // приемаме fn
-    : People(n, egn, d), groupNumber(groupNum), facultyNumber(fn)
+    : People(n, egn, d, gender), groupNumber(groupNum), facultyNumber(fn)
 {
     for (int i = 0; i < 5; i++)
     {

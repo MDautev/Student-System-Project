@@ -47,7 +47,17 @@ void generateTestStudents(GroupManager &manager, int count = 10)
 
         string fn = FacultyNumberGenerator::generate(group, year);
 
-        Student *s = new Student(name, egn, birthDate, grades, group, fn);
+        Gender gender = (rand() % 2 == 0) ? Gender::Male : Gender::Female;
+
+        Student *s = new Student(
+            name,
+            egn,
+            birthDate,
+            gender, // 🔥 НОВИЯТ ПАРАМЕТЪР
+            grades,
+            group,
+            fn);
+
         manager.addStudent(group, s);
     }
 }
@@ -116,10 +126,27 @@ int main()
 
             cout << "Име: ";
             getline(cin, name);
-            cout << "ЕГН: ";
-            cin >> egn;
             cout << "Рожден ден (ден месец година): ";
             cin >> d >> m >> y;
+            Date date(d, m, y);
+            char g;
+            cout << "Пол (m/f): ";
+            cin >> g;
+
+            Gender gender = (g == 'm' || g == 'M') ? Gender::Male : Gender::Female;
+            while (1)
+            {
+                cout << "ЕГН: ";
+                cin >> egn;
+                if (!People::validateEGN(egn, date, gender))
+                {
+                    cout << "Невалидно ЕГН!\n";
+                }
+                else
+                {
+                    break;
+                }
+            }
             cout << "Въведете 5 оценки: ";
             for (int i = 0; i < 5; i++)
                 cin >> grades[i];
@@ -133,13 +160,11 @@ int main()
             // Генериране на факултетен номер
             string fn = FacultyNumberGenerator::generate(groupNumber, enrollYear);
 
-            Date date(d, m, y);
-
             Student *s = nullptr;
             if (type == 1)
-                s = new Student(name, egn, date, grades, groupNumber, fn);
+                s = new Student(name, egn, date, gender, grades, groupNumber, fn);
             else
-                s = new PStudent(name, egn, date, grades, groupNumber, fn);
+                s = new PStudent(name, egn, date, gender, grades, groupNumber, fn);
 
             manager.addStudent(groupNumber, s);
 

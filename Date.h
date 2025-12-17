@@ -15,6 +15,7 @@ public:
     int getYear() const;
     int getMonth() const;
     int getDay() const;
+    static bool isValid(int d, int m, int y);
 };
 
 #endif

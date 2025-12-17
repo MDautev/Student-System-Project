@@ -17,6 +17,7 @@ public:
     Student(const std::string &n,
             const std::string &egn,
             const Date &d,
+            Gender gender,
             double g[5],
             int groupNum,
             const std::string &fn); // нов конструктор с fn
