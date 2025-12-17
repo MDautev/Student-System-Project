@@ -3,6 +3,12 @@
 
 using namespace std;
 
+PStudent::PStudent(const PStudent &other)
+    : Student(other) // извиква copy constructor на Student
+{
+    // Няма нужда от нов масив, Student вече го копира
+}
+
 PStudent::PStudent(const std::string &n,
                    const std::string &egn,
                    const Date &d,
@@ -22,3 +28,10 @@ void PStudent::print() const
     Student::print();
     cout << "Право на стипендия: " << (hasScholarship() ? "Да" : "Не") << endl;
 }
+
+People *PStudent::clone() const
+{
+    return new PStudent(*this);
+}
+
+PStudent::~PStudent() {}

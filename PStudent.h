@@ -17,6 +17,9 @@ public:
     bool hasScholarship() const;
 
     void print() const override;
+    People *clone() const override;
+    PStudent(const PStudent &other);
+    ~PStudent();
 };
 
 #endif

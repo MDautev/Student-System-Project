@@ -26,6 +26,12 @@ public:
     std::string getFacultyNumber() const;
     int getGroupNumber() const;
     void print() const;
+    void setGrades(const double newGrades[5]);
+    void setGroupNumber(int newGroupNumber);
+    People *clone() const override;
+    Student(const Student &other); // copy constructor
+    void setFacultyNumber(const std::string &fn) { facultyNumber = fn; }
+    ~Student();
 };
 
 #endif

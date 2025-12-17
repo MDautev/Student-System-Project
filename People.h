@@ -32,6 +32,7 @@ public:
     virtual ~People();
     std::string getName() const;
     Gender getGender() const;
+    virtual People *clone() const = 0;
 };
 
 #endif

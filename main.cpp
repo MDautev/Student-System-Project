@@ -97,7 +97,8 @@ int main()
 
     // генерираме 10 тестови студенти
     generateTestStudents(manager, 10);
-
+    Student *lastBackup = nullptr;
+    Student *lastEditedStudent = nullptr;
     int choice;
 
     do
@@ -107,6 +108,8 @@ int main()
         cout << "2. Преглед на всички студенти\n";
         cout << "3. Търсене на студенти\n";
         cout << "4. Изтриване на студент\n";
+        cout << "5. Редактиране на студент\n";
+        cout << "6. Върни промените\n";
         cout << "0. Изход\n";
         cout << "Изберете опция: ";
         cin >> choice;
@@ -423,6 +426,75 @@ int main()
             else
                 cout << "Няма такъв студент!" << endl;
 
+            break;
+        }
+
+        case 5: // Редакция на студент
+        {
+            string fn;
+            cout << "Въведете факултетен номер на студента за редакция: ";
+            cin >> fn;
+
+            Student *student = nullptr;
+
+            // Търсим студента във всички групи
+            for (const auto &pair : manager.getAllGroups())
+            {
+                student = pair.second.findByFacultyNumber(fn);
+                if (student)
+                    break;
+            }
+
+            if (!student)
+            {
+                cout << "Няма такъв студент.\n";
+                break;
+            }
+
+            // Премахваме предишния backup, ако има
+            if (lastBackup)
+                delete lastBackup;
+
+            // Създаваме backup за undo
+            lastBackup = dynamic_cast<Student *>(student->clone());
+            lastEditedStudent = student;
+
+            // Редакция на оценки
+            cout << "Редакция на оценки (5 числа, разделени с интервал): ";
+            double newGrades[5];
+            for (int i = 0; i < 5; i++)
+                cin >> newGrades[i];
+            student->setGrades(newGrades);
+
+            // Редакция на група
+            cout << "Редакция на група: ";
+            int newGroup;
+            cin >> newGroup;
+
+            student->setGroupNumber(newGroup);
+
+            // Автоматична смяна на факултетен номер
+            int enrollYear;
+            cout << "Година на записване: ";
+            cin >> enrollYear;
+            string newFN = FacultyNumberGenerator::generate(newGroup, enrollYear);
+            student->setFacultyNumber(newFN);
+
+            cout << "Промените са записани.\n";
+            break;
+        }
+
+        case 6: // Undo последна редакция
+        {
+            if (lastBackup && lastEditedStudent)
+            {
+                *lastEditedStudent = *lastBackup;
+                cout << "Последната промяна е отменена.\n";
+            }
+            else
+            {
+                cout << "Няма промени за връщане.\n";
+            }
             break;
         }
 

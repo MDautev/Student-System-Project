@@ -3,6 +3,17 @@
 
 using namespace std;
 
+// Copy constructor за deep copy
+Student::Student(const Student &other)
+    : People(other.name, other.EGN, other.birthDate, other.gender), // базов конструктор
+      groupNumber(other.groupNumber),
+      facultyNumber(other.facultyNumber)
+{
+    // копираме оценките
+    for (int i = 0; i < 5; i++)
+        grades[i] = other.grades[i];
+}
+
 Student::Student(const string &n,
                  const string &egn,
                  const Date &d,
@@ -43,3 +54,21 @@ void Student::print() const
          << ", Среден успех: " << calculateAverage()
          << ", Възраст: " << getAge() << " години" << endl;
 }
+
+People *Student::clone() const
+{
+    return new Student(*this); // използваме copy constructor за deep copy
+}
+
+void Student::setGrades(const double newGrades[5])
+{
+    for (int i = 0; i < 5; i++)
+        grades[i] = newGrades[i];
+}
+
+void Student::setGroupNumber(int newGroupNumber)
+{
+    groupNumber = newGroupNumber;
+}
+
+Student::~Student() {}

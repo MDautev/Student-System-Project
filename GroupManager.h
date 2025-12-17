@@ -14,6 +14,7 @@ public:
     Group *getGroup(int groupNumber);
     const std::map<int, Group> &getAllGroups() const;
     std::map<int, Group> &getAllGroups() { return groups; }
+    Student *findStudentByFacultyNumber(const std::string &fn);
 };
 
 #endif

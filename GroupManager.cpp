@@ -17,3 +17,14 @@ const std::map<int, Group> &GroupManager::getAllGroups() const
 {
     return groups;
 }
+
+Student *GroupManager::findStudentByFacultyNumber(const std::string &fn)
+{
+    for (auto &pair : groups)
+    {
+        Student *s = pair.second.findByFacultyNumber(fn);
+        if (s)
+            return s;
+    }
+    return nullptr;
+}
