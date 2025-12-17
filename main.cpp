@@ -107,9 +107,10 @@ int main()
         cout << "1. Добавяне на студент\n";
         cout << "2. Преглед на всички студенти\n";
         cout << "3. Търсене на студенти\n";
-        cout << "4. Изтриване на студент\n";
-        cout << "5. Редактиране на студент\n";
-        cout << "6. Върни промените\n";
+        cout << "4. Отчет на група\n";
+        cout << "5. Изтриване на студент\n";
+        cout << "6. Редактиране на студент\n";
+        cout << "7. Върни промените\n";
         cout << "0. Изход\n";
         cout << "Изберете опция: ";
         cin >> choice;
@@ -404,8 +405,24 @@ int main()
             delete strategy;
             break;
         }
-
         case 4:
+        {
+            int groupNum;
+            cout << "Въведете номер на група: ";
+            cin >> groupNum;
+
+            auto it = manager.getAllGroups().find(groupNum);
+            if (it == manager.getAllGroups().end())
+            {
+                cout << "Няма такава група.\n";
+                break;
+            }
+
+            it->second.generateReport();
+            break;
+        }
+
+        case 5:
         {
             string fn;
             cout << "Въведете факултетен номер за изтриване: ";
@@ -429,7 +446,7 @@ int main()
             break;
         }
 
-        case 5: // Редакция на студент
+        case 6: // Редакция на студент
         {
             string fn;
             cout << "Въведете факултетен номер на студента за редакция: ";
@@ -484,7 +501,7 @@ int main()
             break;
         }
 
-        case 6: // Undo последна редакция
+        case 7: // Undo последна редакция
         {
             if (lastBackup && lastEditedStudent)
             {

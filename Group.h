@@ -21,6 +21,7 @@ public:
     Student *getStudentAt(int index) const { return students[index]; }
     Student *findByFacultyNumber(const std::string &fn) const;
     bool removeByFacultyNumber(const std::string &fn);
+    void generateReport() const;
 
     void setSortStrategy(SortStrategy *strategy);
     void sortStudents();
