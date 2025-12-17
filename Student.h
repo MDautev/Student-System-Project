@@ -32,6 +32,7 @@ public:
     People *clone() const override;
     Student(const Student &other); // copy constructor
     void setFacultyNumber(const std::string &fn) { facultyNumber = fn; }
+    const double *getGrades() const { return grades; }
     ~Student();
 };
 

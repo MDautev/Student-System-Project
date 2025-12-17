@@ -13,6 +13,7 @@
 #include "SortByGrade.h"
 #include "SortByName.h"
 #include "AppException.h"
+#include "Logger.h"
 #include <vector>
 #include <algorithm>
 #ifdef _WIN32
@@ -156,24 +157,29 @@ int main()
                     throw InvalidEGNException();
                 }
                 bool egnExists = false;
-                for (const auto& pair : manager.getAllGroups()) {
-                    for (int i = 0; i < pair.second.getCount(); i++) {
-                        if (pair.second.getStudentAt(i)->getEGN() == egn) {
+                for (const auto &pair : manager.getAllGroups())
+                {
+                    for (int i = 0; i < pair.second.getCount(); i++)
+                    {
+                        if (pair.second.getStudentAt(i)->getEGN() == egn)
+                        {
                             egnExists = true;
                             break;
                         }
                     }
-                    if (egnExists) break;
+                    if (egnExists)
+                        break;
                 }
 
-                if (egnExists) {
+                if (egnExists)
+                {
                     throw DuplicateEGNException();
                 }
 
                 cout << "Въведете 5 оценки: ";
                 for (int i = 0; i < 5; i++)
                 {
-                        cin >> grades[i];
+                    cin >> grades[i];
                     if (!Student::IsGradeValid(grades[i]))
                     {
                         throw InvalidGradeException();
@@ -202,7 +208,7 @@ int main()
                     s = new PStudent(name, egn, date, gender, grades, groupNumber, fn);
 
                 manager.addStudent(groupNumber, s);
-
+                Logger::log("Добавен студент: " + name + " с факултетен номер " + fn);
                 break;
             }
 
@@ -470,7 +476,10 @@ int main()
                 }
 
                 if (deleted)
+                {
                     cout << "Студентът е изтрит успешно." << endl;
+                    Logger::log("Изтрит студент с факултетен номер " + fn);
+                }
                 else
                     cout << "Няма такъв студент!" << endl;
 
@@ -507,6 +516,13 @@ int main()
                 lastBackup = dynamic_cast<Student *>(student->clone());
                 lastEditedStudent = student;
 
+                // Запазваме старите данни за лог
+                double oldGrades[5];
+                for (int i = 0; i < 5; i++)
+                    oldGrades[i] = student->getGrades()[i];
+                int oldGroup = student->getGroupNumber();
+                string oldFN = student->getFacultyNumber();
+
                 // Редакция на оценки
                 cout << "Редакция на оценки (5 числа, разделени с интервал): ";
                 double newGrades[5];
@@ -517,7 +533,7 @@ int main()
                     {
                         throw InvalidGradeException();
                     }
-               }
+                }
                 student->setGrades(newGrades);
 
                 // Редакция на група
@@ -542,6 +558,19 @@ int main()
                 student->setFacultyNumber(newFN);
 
                 cout << "Промените са записани.\n";
+
+                // Логваме старите и новите данни
+                Logger::log("Редакция на студент с факултетен номер " + oldFN +
+                            ": оценки [" +
+                            to_string(oldGrades[0]) + ", " + to_string(oldGrades[1]) + ", " +
+                            to_string(oldGrades[2]) + ", " + to_string(oldGrades[3]) + ", " +
+                            to_string(oldGrades[4]) + "], група " + to_string(oldGroup) +
+                            " -> нови оценки [" +
+                            to_string(newGrades[0]) + ", " + to_string(newGrades[1]) + ", " +
+                            to_string(newGrades[2]) + ", " + to_string(newGrades[3]) + ", " +
+                            to_string(newGrades[4]) + "], група " + to_string(newGroup) +
+                            ", факултетен номер " + newFN);
+
                 break;
             }
 
@@ -549,7 +578,31 @@ int main()
             {
                 if (lastBackup && lastEditedStudent)
                 {
+                    // Запазваме текущите данни за лог
+                    double curGrades[5];
+                    for (int i = 0; i < 5; i++)
+                        curGrades[i] = lastEditedStudent->getGrades()[i];
+                    int curGroup = lastEditedStudent->getGroupNumber();
+                    string curFN = lastEditedStudent->getFacultyNumber();
+
+                    // Връщаме backup
                     *lastEditedStudent = *lastBackup;
+
+                    // Логваме какво е върнато
+                    Logger::log("Отменена редакция на студент с факултетен номер " + lastEditedStudent->getFacultyNumber() +
+                                ": оценки [" +
+                                to_string(curGrades[0]) + ", " + to_string(curGrades[1]) + ", " +
+                                to_string(curGrades[2]) + ", " + to_string(curGrades[3]) + ", " +
+                                to_string(curGrades[4]) + "], група " + to_string(curGroup) +
+                                " -> възстановени оценки [" +
+                                to_string(lastEditedStudent->getGrades()[0]) + ", " +
+                                to_string(lastEditedStudent->getGrades()[1]) + ", " +
+                                to_string(lastEditedStudent->getGrades()[2]) + ", " +
+                                to_string(lastEditedStudent->getGrades()[3]) + ", " +
+                                to_string(lastEditedStudent->getGrades()[4]) + "], група " +
+                                to_string(lastEditedStudent->getGroupNumber()) +
+                                ", факултетен номер " + lastEditedStudent->getFacultyNumber());
+
                     cout << "Последната промяна е отменена.\n";
                 }
                 else
@@ -569,6 +622,7 @@ int main()
         }
         catch (const AppException &e)
         {
+            Logger::log("Грешка: " + std::string(e.what()));
             cout << e.what() << endl;
         }
     } while (choice != 0);
