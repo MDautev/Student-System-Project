@@ -49,7 +49,7 @@ Gender People::getGender() const
     return gender;
 }
 
-bool People::validateEGN(const std::string &egn, Date &outDate, Gender &outGender)
+bool People::validateEGN(const string &egn, Date &outDate, Gender &outGender)
 {
     if (egn.length() != 10)
         return false;

@@ -25,6 +25,7 @@ public:
     double calculateAverage() const;
     std::string getFacultyNumber() const;
     int getGroupNumber() const;
+    static bool IsGradeValid(const float grade);
     void print() const;
     void setGrades(const double newGrades[5]);
     void setGroupNumber(int newGroupNumber);

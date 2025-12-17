@@ -71,4 +71,15 @@ void Student::setGroupNumber(int newGroupNumber)
     groupNumber = newGroupNumber;
 }
 
+bool Student::IsGradeValid(const float grade)
+{
+    if (grade < 2 || grade > 6)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
 Student::~Student() {}

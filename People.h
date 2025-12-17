@@ -33,6 +33,10 @@ public:
     std::string getName() const;
     Gender getGender() const;
     virtual People *clone() const = 0;
+    std::string getEGN() const {
+    return EGN;
+}
+
 };
 
 #endif
