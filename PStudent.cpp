@@ -1,6 +1,6 @@
 #include <iostream>
 #include "PStudent.h"
-
+#include "Config.h"
 using namespace std;
 
 PStudent::PStudent(const PStudent &other)
@@ -20,7 +20,7 @@ PStudent::PStudent(const std::string &n,
 
 bool PStudent::hasScholarship() const
 {
-    return calculateAverage() > 4.5;
+    return calculateAverage() >= Config::getDouble("min_scholarship_grade");
 }
 
 void PStudent::print() const

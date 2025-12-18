@@ -14,7 +14,9 @@
 #include "SortByName.h"
 #include "AppException.h"
 #include "Logger.h"
+#include "Config.h"
 #include <vector>
+#include <fstream>
 #include <algorithm>
 #ifdef _WIN32
 #include <windows.h>
@@ -96,7 +98,8 @@ int main()
 #endif
 
     GroupManager manager;
-
+    Config::load("config.ini");
+    ofstream file(Config::getString("log_file"), ios::app);
     // генерираме 10 тестови студенти
     generateTestStudents(manager, 10);
     Student *lastBackup = nullptr;
@@ -113,6 +116,7 @@ int main()
         cout << "5. Изтриване на студент\n";
         cout << "6. Редактиране на студент\n";
         cout << "7. Върни промените\n";
+        cout << "8. Преглед на лог файл\n";
         cout << "0. Изход\n";
         cout << "Изберете опция: ";
         cin >> choice;
@@ -609,6 +613,11 @@ int main()
                 {
                     cout << "Няма промени за връщане.\n";
                 }
+                break;
+            }
+            case 8:
+            {
+                Logger::readLogs();
                 break;
             }
 
