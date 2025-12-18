@@ -21,49 +21,40 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-
 using namespace std;
-
 #include <cstdlib>
 #include <ctime>
 
-// Временно за тестове
-void generateTestStudents(GroupManager &manager, int count = 10)
+// --- безопасно четене на int ---
+int readInt(const std::string &prompt = "")
 {
-    srand(static_cast<unsigned>(time(0)));
-
-    string names[] = {"Иван", "Георги", "Мария", "Елена", "Димитър", "Петя", "Александър", "Светла"};
-    int groupNumbers[] = {11, 12, 21, 22};
-    int enrollYears[] = {2021, 2022, 2023};
-
-    for (int i = 0; i < count; i++)
+    int value;
+    while (true)
     {
-        string name = names[rand() % 8];
-        string egn = to_string(9000000000 + rand() % 1000000000); // случаен ЕГН
-        Date birthDate(rand() % 28 + 1, rand() % 12 + 1, 1995 + rand() % 10);
-
-        double grades[5];
-        for (int j = 0; j < 5; j++)
-            grades[j] = 3.0 + static_cast<double>(rand() % 21) / 10.0; // 3.0 - 5.0
-
-        int group = groupNumbers[rand() % 4];
-        int year = enrollYears[rand() % 3];
-
-        string fn = FacultyNumberGenerator::generate(group, year);
-
-        Gender gender = (rand() % 2 == 0) ? Gender::Male : Gender::Female;
-
-        Student *s = new Student(
-            name,
-            egn,
-            birthDate,
-            gender, // 🔥 НОВИЯТ ПАРАМЕТЪР
-            grades,
-            group,
-            fn);
-
-        manager.addStudent(group, s);
+        cout << prompt;
+        if (cin >> value)
+            break;
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Грешка: Моля, въведете число!\n";
     }
+    return value;
+}
+
+// --- безопасно четене на double ---
+double readDouble(const std::string &prompt = "")
+{
+    double value;
+    while (true)
+    {
+        cout << prompt;
+        if (cin >> value)
+            break;
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Грешка: Моля, въведете число!\n";
+    }
+    return value;
 }
 
 SortStrategy *chooseSortStrategy()
@@ -75,7 +66,7 @@ SortStrategy *chooseSortStrategy()
     cout << "3. Факултетен номер\n";
     cout << "0. Без сортиране\n";
     cout << "Избор: ";
-    cin >> sortChoice;
+    sortChoice = readInt();
 
     switch (sortChoice)
     {
@@ -100,8 +91,14 @@ int main()
     GroupManager manager;
     Config::load("config.ini");
     ofstream file(Config::getString("log_file"), ios::app);
-    // генерираме 10 тестови студенти
-    generateTestStudents(manager, 10);
+    try
+    {
+        manager.importFromFile(Config::getString("students_file"));
+    }
+    catch (...)
+    {
+        cout << "Няма начален файл със студенти.\n";
+    }
     Student *lastBackup = nullptr;
     Student *lastEditedStudent = nullptr;
     int choice;
@@ -119,7 +116,7 @@ int main()
         cout << "8. Преглед на лог файл\n";
         cout << "0. Изход\n";
         cout << "Изберете опция: ";
-        cin >> choice;
+        choice = readInt();
         try
         {
             switch (choice)
@@ -128,17 +125,17 @@ int main()
             {
                 int type;
                 cout << "Изберете тип студент (1 - редовен, 2 - платен): ";
-                cin >> type;
-                cin.ignore();
+                type = readInt();
 
                 string name, egn;
-                int d, m, y;
                 double grades[5];
 
                 cout << "Име: ";
                 getline(cin, name);
-                cout << "Рожден ден (ден месец година): ";
-                cin >> d >> m >> y;
+                int d = readInt("Въведете ден на раждане: ");
+                int m = readInt("Въведете месец на раждане: ");
+                int y = readInt("Въведете година на раждане: ");
+
                 if (!Date::isValid(d, m, y))
                 {
                     throw InvalidDateException();
@@ -160,22 +157,7 @@ int main()
                 {
                     throw InvalidEGNException();
                 }
-                bool egnExists = false;
-                for (const auto &pair : manager.getAllGroups())
-                {
-                    for (int i = 0; i < pair.second.getCount(); i++)
-                    {
-                        if (pair.second.getStudentAt(i)->getEGN() == egn)
-                        {
-                            egnExists = true;
-                            break;
-                        }
-                    }
-                    if (egnExists)
-                        break;
-                }
-
-                if (egnExists)
+                if (manager.egnExists(egn))
                 {
                     throw DuplicateEGNException();
                 }
@@ -183,7 +165,7 @@ int main()
                 cout << "Въведете 5 оценки: ";
                 for (int i = 0; i < 5; i++)
                 {
-                    cin >> grades[i];
+                    grades[i] = readInt();
                     if (!Student::IsGradeValid(grades[i]))
                     {
                         throw InvalidGradeException();
@@ -191,13 +173,13 @@ int main()
                 }
                 int groupNumber, enrollYear;
                 cout << "Номер на група: ";
-                cin >> groupNumber;
+                groupNumber = readInt();
                 if (groupNumber >= 100 || groupNumber <= 1)
                 {
                     throw InvalidGroupException();
                 }
                 cout << "Година на записване: ";
-                cin >> enrollYear;
+                enrollYear = readInt();
                 if (enrollYear < 2020)
                 {
                     throw InvalidYearException();
@@ -207,9 +189,9 @@ int main()
 
                 Student *s = nullptr;
                 if (type == 1)
-                    s = new Student(name, egn, date, gender, grades, groupNumber, fn);
+                    s = new Student(name, egn, date, gender, grades, groupNumber, enrollYear, fn);
                 else
-                    s = new PStudent(name, egn, date, gender, grades, groupNumber, fn);
+                    s = new PStudent(name, egn, date, gender, grades, groupNumber, enrollYear, fn);
 
                 manager.addStudent(groupNumber, s);
                 Logger::log("Добавен студент: " + name + " с факултетен номер " + fn);
@@ -252,9 +234,9 @@ int main()
                 cout << "4. По факултетен номер\n";
                 cout << "5. По няколко критерия (AND / OR)\n";
                 cout << "Изберете опция: ";
-                cin >> searchChoice;
+                searchChoice = readInt();
 
-                // === По отделни критерии ===
+                // === Търсене по отделни критерии ===
                 if (searchChoice == 1)
                 {
                     string name;
@@ -275,7 +257,7 @@ int main()
                 {
                     int grp;
                     cout << "Номер на група: ";
-                    cin >> grp;
+                    grp = readInt();
                     CriteriaByGroup c(grp);
                     for (const auto &pair : manager.getAllGroups())
                         for (int i = 0; i < pair.second.getCount(); i++)
@@ -289,7 +271,7 @@ int main()
                 {
                     double minGrade;
                     cout << "Минимален успех: ";
-                    cin >> minGrade;
+                    minGrade = readDouble();
                     CriteriaByMinGrade c(minGrade);
                     for (const auto &pair : manager.getAllGroups())
                         for (int i = 0; i < pair.second.getCount(); i++)
@@ -326,7 +308,7 @@ int main()
                     cout << "Изберете първи критерий:\n";
                     for (int i = 0; i < options.size(); i++)
                         cout << i + 1 << ". " << options[i] << endl;
-                    cin >> firstChoice;
+                    firstChoice = readInt();
                     used[firstChoice - 1] = true;
 
                     Criteria *firstCrit = nullptr;
@@ -342,14 +324,14 @@ int main()
                     {
                         int grp;
                         cout << "Номер на група: ";
-                        cin >> grp;
+                        grp = readInt();
                         firstCrit = new CriteriaByGroup(grp);
                     }
                     else if (firstChoice == 3)
                     {
                         double minGrade;
                         cout << "Минимален успех: ";
-                        cin >> minGrade;
+                        minGrade = readDouble();
                         firstCrit = new CriteriaByMinGrade(minGrade);
                     }
 
@@ -357,7 +339,7 @@ int main()
 
                     int logicChoice;
                     cout << "1. AND (и)\n2. OR (или)\nИзберете логика: ";
-                    cin >> logicChoice;
+                    logicChoice = readInt();
 
                     Criteria *combo = selectedCriteria[0];
 
@@ -370,7 +352,7 @@ int main()
                                 cout << i + 1 << ". " << options[i] << endl;
 
                         int nextChoice;
-                        cin >> nextChoice;
+                        nextChoice = readInt();
                         if (nextChoice == 0)
                             break;
                         used[nextChoice - 1] = true;
@@ -388,14 +370,14 @@ int main()
                         {
                             int grp;
                             cout << "Номер на група: ";
-                            cin >> grp;
+                            grp = readInt();
                             nextCrit = new CriteriaByGroup(grp);
                         }
                         else if (nextChoice == 3)
                         {
                             double minGrade;
                             cout << "Минимален успех: ";
-                            cin >> minGrade;
+                            minGrade = readDouble();
                             nextCrit = new CriteriaByMinGrade(minGrade);
                         }
 
@@ -450,7 +432,7 @@ int main()
             {
                 int groupNum;
                 cout << "Въведете номер на група: ";
-                cin >> groupNum;
+                groupNum = readInt();
 
                 auto it = manager.getAllGroups().find(groupNum);
                 if (it == manager.getAllGroups().end())
@@ -532,7 +514,7 @@ int main()
                 double newGrades[5];
                 for (int i = 0; i < 5; i++)
                 {
-                    cin >> newGrades[i];
+                    newGrades[i] = readInt();
                     if (!Student::IsGradeValid(newGrades[i]))
                     {
                         throw InvalidGradeException();
@@ -543,7 +525,7 @@ int main()
                 // Редакция на група
                 cout << "Редакция на група: ";
                 int newGroup;
-                cin >> newGroup;
+                newGroup = readInt();
                 if (newGroup >= 100 || newGroup <= 1)
                 {
                     throw InvalidGroupException();
@@ -553,7 +535,7 @@ int main()
                 // Автоматична смяна на факултетен номер
                 int enrollYear;
                 cout << "Година на записване: ";
-                cin >> enrollYear;
+                enrollYear = readInt();
                 if (enrollYear < 2020)
                 {
                     throw InvalidYearException();
@@ -622,6 +604,8 @@ int main()
             }
 
             case 0:
+                manager.exportToFile(Config::getString("students_file"));
+                Logger::log("Запис на всички студенти и изход от програмата.");
                 cout << "Изход..." << endl;
                 break;
 

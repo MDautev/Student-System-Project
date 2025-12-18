@@ -63,10 +63,21 @@ public:
     InvalidYearException() : AppException("Невалидна година!") {}
 };
 
-class DuplicateEGNException : public AppException {
+class DuplicateEGNException : public AppException
+{
 public:
-    const char* what() const noexcept override {
+    const char *what() const noexcept override
+    {
         return "Вече съществува човек с това ЕГН!";
+    }
+};
+
+class FileOpenException : public AppException
+{
+public:
+    const char *what() const noexcept override
+    {
+        return "Грешка при отваряне на файл.";
     }
 };
 

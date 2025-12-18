@@ -12,7 +12,8 @@ public:
              Gender gender,
              double g[5],
              int groupNum,
-             const std::string &fn); // нов конструктор
+             int enroll,
+             const std::string &fn);
 
     bool hasScholarship() const;
 

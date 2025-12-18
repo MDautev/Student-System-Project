@@ -20,8 +20,9 @@ Student::Student(const string &n,
                  Gender gender,
                  double g[5],
                  int groupNum,
-                 const string &fn) // приемаме fn
-    : People(n, egn, d, gender), groupNumber(groupNum), facultyNumber(fn)
+                 int enroll,
+                 const string &fn)
+    : People(n, egn, d, gender), groupNumber(groupNum), facultyNumber(fn), enrollYear(enroll)
 {
     for (int i = 0; i < 5; i++)
     {
@@ -82,4 +83,3 @@ bool Student::IsGradeValid(const float grade)
         return true;
     }
 }
-Student::~Student() {}

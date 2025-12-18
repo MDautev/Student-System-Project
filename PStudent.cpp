@@ -6,7 +6,6 @@ using namespace std;
 PStudent::PStudent(const PStudent &other)
     : Student(other) // извиква copy constructor на Student
 {
-    // Няма нужда от нов масив, Student вече го копира
 }
 
 PStudent::PStudent(const std::string &n,
@@ -15,8 +14,9 @@ PStudent::PStudent(const std::string &n,
                    Gender gender,
                    double g[5],
                    int gn,
+                   int enroll,
                    const std::string &fn)
-    : Student(n, egn, d, gender, g, gn, fn) {}
+    : Student(n, egn, d, gender, g, gn, enroll, fn) {}
 
 bool PStudent::hasScholarship() const
 {

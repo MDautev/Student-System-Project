@@ -12,6 +12,7 @@ private:
 
 protected:
     int groupNumber;
+    int enrollYear;
 
 public:
     Student(const std::string &n,
@@ -20,6 +21,7 @@ public:
             Gender gender,
             double g[5],
             int groupNum,
+            int enroll,
             const std::string &fn); // нов конструктор с fn
 
     double calculateAverage() const;
@@ -33,7 +35,9 @@ public:
     Student(const Student &other); // copy constructor
     void setFacultyNumber(const std::string &fn) { facultyNumber = fn; }
     const double *getGrades() const { return grades; }
-    ~Student();
+    Date getBirthDate() const { return birthDate; }
+    int getEnrollYear() const { return enrollYear; }
+    virtual ~Student() = default;
 };
 
 #endif
