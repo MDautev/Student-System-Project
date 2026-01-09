@@ -80,7 +80,7 @@ void GroupManager::importFromFile(const std::string &filename)
         std::string egn = parts[2];
 
         if (egnExists(egn))
-            continue; // 🔥 ключовото: дублиращо ЕГН → skip
+            continue; 
 
         int d = stoi(parts[3]);
         int m = stoi(parts[4]);
@@ -120,34 +120,34 @@ void GroupManager::exportToFile(const std::string &filename) const
         return;
     }
 
-    // Обхождаме всички групи
+    
     for (const auto &groupPair : groups)
-    { // groups: std::map<int, Group>
+    { 
         const Group &group = groupPair.second;
 
-        // Обхождаме всички студенти в групата
+        
         for (int i = 0; i < group.getCount(); ++i)
         {
             const Student *s = group.getStudentAt(i);
 
-            // Тип на студента
+           
             char typeChar = dynamic_cast<const PStudent *>(s) ? 'P' : 'R';
             file << typeChar << "|";
 
-            // Име
+            
             file << s->getName() << "|";
 
-            // Факултетен номер
+            
             file << s->getEGN() << "|";
 
-            // Дата на раждане
+           
             const Date &d = s->getBirthDate();
             file << d.getDay() << "|" << d.getMonth() << "|" << d.getYear() << "|";
 
-            // Пол
+         
             file << (s->getGender() == Gender::Male ? "m" : "f") << "|";
 
-            // 5 оценки
+            
             const double *grades = s->getGrades();
             for (int g = 0; g < 5; ++g)
             {
@@ -156,7 +156,7 @@ void GroupManager::exportToFile(const std::string &filename) const
                     file << "|";
             }
 
-            // Група и година на записване
+            
             file << "|" << s->getGroupNumber() << "|";
             file << s->getEnrollYear() << "\n";
         }
